@@ -43,7 +43,7 @@ interface IClickhouseSchema<T extends ChSchemaDefinition> {
  */
 export class ClickhouseSchema<SchemaDefinition extends ChSchemaDefinition> implements IClickhouseSchema<SchemaDefinition> {
   readonly schema: SchemaDefinition
-  readonly options: ChSchemaOptions<SchemaDefinition>
+  private readonly options: ChSchemaOptions<SchemaDefinition>
 
   constructor (schema: SchemaDefinition, options: ChSchemaOptions<SchemaDefinition>) {
     this.schema = schema
