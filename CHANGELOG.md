@@ -5,6 +5,7 @@
 ### Minor Changes
 
 - support for point type, tuple type and bug fixes
+- Add support for partition_by option
 
 ## 3.0.0
 

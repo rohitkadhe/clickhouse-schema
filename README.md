@@ -97,6 +97,47 @@ To start using ClickHouse-Schema in your projects, follow these steps:
     - Use `<your_schema>.GetOptions()` to access the options passed when creating the table schema.
     - Use `<your_schema>.GetCreateTableQueryAsList()` to get the `CREATE TABLE` query as a list of strings, which can be helpful for debugging or logging.
 
+## Schema Options
+
+When creating a schema, you can provide the following options:
+
+- **`table_name`** (required): The name of the table in ClickHouse
+- **`primary_key`** (optional): The primary key for the table. If not specified, `order_by` must be specified
+- **`order_by`** (optional): The ORDER BY clause for the table. If not specified, `primary_key` must be specified
+- **`database`** (optional): The database to use for the table
+- **`on_cluster`** (optional): The name of the cluster to use for the table
+- **`engine`** (optional): The engine to use for the table, default is `MergeTree()`
+- **`partition_by`** (optional): The partition expression for the table. Can be any valid ClickHouse expression:
+  - Single expression: `"toYYYYMM(visitDate)"` or `"visitDate"`
+  - Tuple of expressions: `"(toMonday(startDate), eventType)"`
+  - Complex expressions: `"sipHash64(userId) % 16"`
+- **`additional_options`** (optional): An array of strings that are appended to the end of the CREATE TABLE query (e.g., `['COMMENT \'Table comment\'']`)
+
+### Example with Partition By
+
+```typescript
+const visitsTableSchema = new ClickhouseSchema({
+  id: { type: CHUInt32() },
+  visitDate: { type: CHDate() },
+  userId: { type: CHUInt64() }
+}, {
+  table_name: 'visits',
+  primary_key: 'id',
+  partition_by: 'toYYYYMM(visitDate)'  // Partition by month
+})
+
+// Or with a tuple expression
+const eventsTableSchema = new ClickhouseSchema({
+  id: { type: CHUInt32() },
+  startDate: { type: CHDate() },
+  eventType: { type: CHString() }
+}, {
+  table_name: 'events',
+  primary_key: 'id',
+  partition_by: '(toMonday(startDate), eventType)'  // Partition by week and event type
+})
+```
+
 ## Supported Types
 
 - Integer (signed and unsigned integers): `UInt8, UInt16, UInt32, UInt64, UInt128, UInt256, Int8, Int16, Int32, Int64, Int128, Int256` types
