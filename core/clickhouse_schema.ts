@@ -1,17 +1,9 @@
 import { type ChDataType } from '@clickhouse-schema-data-types/index'
 
-type IsType<T, U> = T extends U ? true : false
-
-// Distributive conditional type that checks if T is of any type in union U
-type OmitKeysOfTypes<T extends ChSchemaDefinition, U> = {
-  [K in keyof T as IsType< T[K]['type']['typeStr'], U> extends true ? never : K]: T[K]
-}
-
 export interface SchemaValue {
-  type: ChDataType
+type: ChDataType
 }
-export type ChSchemaDefinition = Record<string, SchemaValue>
-
+export type ChSchemaDefinition = {[key: string]: SchemaValue}
 /**
  * ChSchemaOptions is used to define the options for a clickhouse table schema.
  *
@@ -21,15 +13,17 @@ export type ChSchemaDefinition = Record<string, SchemaValue>
  * @param primary_key is the primary key for the table. if not specified, order_by must be specified
  * @param order_by is the order by clause for the table. if not specified, primary_key must be specified
  * @param engine is the engine to use for the table, default is MergeTree()
+ * @param partition_by is the partition expression for the table. Can be any valid ClickHouse expression (e.g., "toYYYYMM(date_column)", "(toMonday(StartDate), EventType)", "sipHash64(userId) % 16")
  * @param additional_options is an string array of options that are appended to the end of the create table query
  */
 export interface ChSchemaOptions<T extends ChSchemaDefinition> {
   database?: string
   table_name: string
   on_cluster?: string
-  primary_key?: keyof OmitKeysOfTypes<T, 'Object(\'JSON\')' >
-  order_by?: keyof OmitKeysOfTypes<T, 'Object(\'JSON\')' >
+  primary_key?: keyof T
+  order_by?: keyof T
   engine?: string
+  partition_by?: string
   additional_options?: string[]
 }
 
@@ -49,7 +43,7 @@ interface IClickhouseSchema<T extends ChSchemaDefinition> {
  */
 export class ClickhouseSchema<SchemaDefinition extends ChSchemaDefinition> implements IClickhouseSchema<SchemaDefinition> {
   readonly schema: SchemaDefinition
-  private readonly options: ChSchemaOptions<SchemaDefinition>
+  readonly options: ChSchemaOptions<SchemaDefinition>
 
   constructor (schema: SchemaDefinition, options: ChSchemaOptions<SchemaDefinition>) {
     this.schema = schema
@@ -98,11 +92,11 @@ export class ClickhouseSchema<SchemaDefinition extends ChSchemaDefinition> imple
     if (this.options.additional_options !== undefined) {
       additionalOptions = `${this.options.additional_options.join('\n')}`
     }
-
     const createTableQuery = [
       `CREATE TABLE IF NOT EXISTS ${this.options.database !== undefined ? `${this.options.database}.` : ''}${this.options.table_name}${this.options.on_cluster !== undefined ? ` ON CLUSTER ${this.options.on_cluster}` : ''}`,
       `(\n${columns}\n)`,
       `ENGINE = ${engine}`,
+      this.options.partition_by !== undefined ? `PARTITION BY ${this.options.partition_by}` : '',
       this.options.order_by !== undefined ? `ORDER BY ${this.options.order_by.toString()}` : '',
       this.options.primary_key !== undefined ? `PRIMARY KEY ${this.options.primary_key.toString()}` : '',
       additionalOptions
