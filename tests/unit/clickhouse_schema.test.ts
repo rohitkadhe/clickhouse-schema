@@ -6,7 +6,10 @@ describe('ClickhouseSchema Tests', () => {
   it('should correctly store schema definitions and options', () => {
     const schemaDefinition = {
       id: { type: ClickhouseTypes.CHUInt128() },
-      ch_json: { type: ClickhouseTypes.CHJSON({ k: { type: ClickhouseTypes.CHString() }, arr: { type: ClickhouseTypes.CHArray(ClickhouseTypes.CHJSON({ nested: { type: ClickhouseTypes.CHString() } })) } }) }
+      ch_json: { type: ClickhouseTypes.CHJSON({ k: { type: ClickhouseTypes.CHString() }, arr: { type: ClickhouseTypes.CHArray(ClickhouseTypes.CHJSON({ nested: { type: ClickhouseTypes.CHString() } })) } }) },
+      ch_point: {type: ClickhouseTypes.CHPoint()},
+      tuple: {type: ClickhouseTypes.CHTuple([ClickhouseTypes.CHString(), ClickhouseTypes.CHBoolean()])}
+
     }
     const options: ChSchemaOptions<typeof schemaDefinition> = {
       primary_key: 'id',
@@ -401,8 +404,8 @@ describe('ClickhouseSchema Tests', () => {
     const schemaDefinition = {
       coords: {
         type: ClickhouseTypes.CHTuple(
-          ClickhouseTypes.CHFloat64(),
-          ClickhouseTypes.CHFloat64()
+          [ClickhouseTypes.CHFloat64(),
+          ClickhouseTypes.CHFloat64()]
         )
       }
     }
@@ -431,8 +434,8 @@ describe('ClickhouseSchema Tests', () => {
     const schemaDefinition = {
       coords: {
         type: ClickhouseTypes.CHTuple(
-          ClickhouseTypes.CHFloat64(),
-          ClickhouseTypes.CHFloat64(),
+          [ClickhouseTypes.CHFloat64(),
+          ClickhouseTypes.CHFloat64()],
           [10.5, 20.3]
         )
       }

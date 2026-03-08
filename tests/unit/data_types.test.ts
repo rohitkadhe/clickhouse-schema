@@ -183,9 +183,9 @@ describe('Data Types Tests', () => {
   })
   
   it('should correctly create a tuple data type with default value', () => {
-    const tuple = ClickhouseTypes.CHTuple([ClickhouseTypes.CHFloat64(), ClickhouseTypes.CHString(), ClickhouseTypes.CHBoolean()], [10.5, '', false])
+    const tuple = ClickhouseTypes.CHTuple([ClickhouseTypes.CHFloat64(), ClickhouseTypes.CHFloat64()], [10.5, 10.5])
   
     expect(tuple.toString()).toEqual('Tuple(Float64, Float64)')
-    expect(tuple.getDefaultSql()).toEqual('(10.5, 20.3)')
+    expect(tuple.getDefaultSql()).toEqual('(10.5, 10.5)')
   })
 })
