@@ -1,6 +1,6 @@
 # ClickHouse-Schema Guide
 
-**Version 3.0.0**
+**Version 3.1.0**
 
 In ClickHouse, defining and managing table schemas and their associated types can be done either manually or through the ClickHouse-Schema library. This guide compares these two approaches to illustrate the simplicity and efficiency ClickHouse-Schema brings to your projects.
 
