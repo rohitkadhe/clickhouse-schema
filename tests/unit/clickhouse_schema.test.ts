@@ -456,4 +456,89 @@ describe('ClickhouseSchema Tests', () => {
   
     expect(query).toEqual(expectedQuery)
   })
+
+  it('should correctly generate a create table query with PARTITION BY single expression (column name)', () => {
+    const schemaDefinition = {
+      id: { type: ClickhouseTypes.CHUUID() },
+      visitDate: { type: ClickhouseTypes.CHDate() },
+      name: { type: ClickhouseTypes.CHString() }
+    }
+    const options: ChSchemaOptions<typeof schemaDefinition> = {
+      table_name: 'visits_table',
+      primary_key: 'id',
+      partition_by: 'visitDate'
+    }
+    const schema = new ClickhouseSchema(schemaDefinition, options)
+    const expectedQuery = 'CREATE TABLE IF NOT EXISTS visits_table\n(\nid UUID,\nvisitDate Date,\nname String\n)\nENGINE = MergeTree()\nPARTITION BY visitDate\nPRIMARY KEY id;'
+    expect(schema.GetCreateTableQuery()).toEqual(expectedQuery)
+  })
+
+  it('should correctly generate a create table query with PARTITION BY single expression (function)', () => {
+    const schemaDefinition = {
+      id: { type: ClickhouseTypes.CHUUID() },
+      visitDate: { type: ClickhouseTypes.CHDate() },
+      name: { type: ClickhouseTypes.CHString() }
+    }
+    const options: ChSchemaOptions<typeof schemaDefinition> = {
+      table_name: 'visits_table',
+      primary_key: 'id',
+      partition_by: 'toYYYYMM(visitDate)'
+    }
+    const schema = new ClickhouseSchema(schemaDefinition, options)
+    const expectedQuery = 'CREATE TABLE IF NOT EXISTS visits_table\n(\nid UUID,\nvisitDate Date,\nname String\n)\nENGINE = MergeTree()\nPARTITION BY toYYYYMM(visitDate)\nPRIMARY KEY id;'
+    expect(schema.GetCreateTableQuery()).toEqual(expectedQuery)
+  })
+
+  it('should correctly generate a create table query with PARTITION BY tuple of expressions', () => {
+    const schemaDefinition = {
+      id: { type: ClickhouseTypes.CHUUID() },
+      startDate: { type: ClickhouseTypes.CHDate() },
+      eventType: { type: ClickhouseTypes.CHString() },
+      counterId: { type: ClickhouseTypes.CHUInt64() }
+    }
+    const options: ChSchemaOptions<typeof schemaDefinition> = {
+      table_name: 'events_table',
+      primary_key: 'id',
+      partition_by: '(toMonday(startDate), eventType)'
+    }
+    const schema = new ClickhouseSchema(schemaDefinition, options)
+    const expectedQuery = 'CREATE TABLE IF NOT EXISTS events_table\n(\nid UUID,\nstartDate Date,\neventType String,\ncounterId UInt64\n)\nENGINE = MergeTree()\nPARTITION BY (toMonday(startDate), eventType)\nPRIMARY KEY id;'
+    expect(schema.GetCreateTableQuery()).toEqual(expectedQuery)
+  })
+
+  it('should correctly generate a create table query with PARTITION BY and complex expression', () => {
+    const schemaDefinition = {
+      userId: { type: ClickhouseTypes.CHUInt64() },
+      sessionId: { type: ClickhouseTypes.CHUUID() }
+    }
+    const options: ChSchemaOptions<typeof schemaDefinition> = {
+      table_name: 'session_log',
+      order_by: 'sessionId',
+      partition_by: 'sipHash64(userId) % 16'
+    }
+    const schema = new ClickhouseSchema(schemaDefinition, options)
+    const expectedQuery = 'CREATE TABLE IF NOT EXISTS session_log\n(\nuserId UInt64,\nsessionId UUID\n)\nENGINE = MergeTree()\nPARTITION BY sipHash64(userId) % 16\nORDER BY sessionId;'
+    expect(schema.GetCreateTableQuery()).toEqual(expectedQuery)
+  })
+
+  it('should correctly generate a create table query with PARTITION BY and all other options', () => {
+    const schemaDefinition = {
+      id: { type: ClickhouseTypes.CHUUID() },
+      visitDate: { type: ClickhouseTypes.CHDate() },
+      name: { type: ClickhouseTypes.CHString() }
+    }
+    const options: ChSchemaOptions<typeof schemaDefinition> = {
+      database: 'analytics_db',
+      table_name: 'visits_table',
+      on_cluster: 'analytics_cluster',
+      primary_key: 'id',
+      order_by: 'visitDate',
+      engine: 'ReplicatedMergeTree()',
+      partition_by: 'toYYYYMM(visitDate)',
+      additional_options: ['COMMENT \'Visits table partitioned by month\'']
+    }
+    const schema = new ClickhouseSchema(schemaDefinition, options)
+    const expectedQuery = 'CREATE TABLE IF NOT EXISTS analytics_db.visits_table ON CLUSTER analytics_cluster\n(\nid UUID,\nvisitDate Date,\nname String\n)\nENGINE = ReplicatedMergeTree()\nPARTITION BY toYYYYMM(visitDate)\nORDER BY visitDate\nPRIMARY KEY id\nCOMMENT \'Visits table partitioned by month\';'
+    expect(schema.GetCreateTableQuery()).toEqual(expectedQuery)
+  })
 })
