@@ -4,7 +4,7 @@
 
 ### Minor Changes
 
-- support for point type and bug fixes
+- support for point type, tuple type and bug fixes
 
 ## 3.0.0
 

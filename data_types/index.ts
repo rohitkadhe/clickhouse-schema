@@ -170,8 +170,7 @@ export const CHPoint = <T extends ChPoint['typeScriptType']>(df?: T): ChPoint =>
  * @param df default value of the tuple [x, y]
  * @returns a new ChTuple object
  */
-export const CHTuple = <V1 extends ChDataType, V2 extends ChDataType, T extends ChTuple<V1, V2>['typeScriptType']>(V1: V1, V2: V2, df?: T): ChTuple<V1, V2> => new ChTuple(V1, V2, df)
-
+export const CHTuple = <Types extends ChDataType[], T extends ChTuple<Types>['typeScriptType'] >(types: [...Types], df?: T): ChTuple<Types> => new ChTuple(types, df)
 /**
  *
  * @param precision precision of the decimal
