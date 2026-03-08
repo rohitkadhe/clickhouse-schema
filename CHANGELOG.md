@@ -1,5 +1,11 @@
 # clickhouse-schema
 
+## 3.1.2
+
+### Patch Changes
+
+- Update repo link
+
 ## 3.1.1
 
 ### Patch Changes
