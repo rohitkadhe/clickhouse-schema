@@ -113,31 +113,6 @@ When creating a schema, you can provide the following options:
   - Complex expressions: `"sipHash64(userId) % 16"`
 - **`additional_options`** (optional): An array of strings that are appended to the end of the CREATE TABLE query (e.g., `['COMMENT \'Table comment\'']`)
 
-### Example with Partition By
-
-```typescript
-const visitsTableSchema = new ClickhouseSchema({
-  id: { type: CHUInt32() },
-  visitDate: { type: CHDate() },
-  userId: { type: CHUInt64() }
-}, {
-  table_name: 'visits',
-  primary_key: 'id',
-  partition_by: 'toYYYYMM(visitDate)'  // Partition by month
-})
-
-// Or with a tuple expression
-const eventsTableSchema = new ClickhouseSchema({
-  id: { type: CHUInt32() },
-  startDate: { type: CHDate() },
-  eventType: { type: CHString() }
-}, {
-  table_name: 'events',
-  primary_key: 'id',
-  partition_by: '(toMonday(startDate), eventType)'  // Partition by week and event type
-})
-```
-
 ## Supported Types
 
 - Integer (signed and unsigned integers): `UInt8, UInt16, UInt32, UInt64, UInt128, UInt256, Int8, Int16, Int32, Int64, Int128, Int256` types
