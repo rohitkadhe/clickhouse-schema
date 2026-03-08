@@ -107,6 +107,7 @@ To start using ClickHouse-Schema in your projects, follow these steps:
 - Boolean: `Boolean` type
 - Strings: `String` and `FixedString` types
 - Dates: `Date`, `Date32`, `DateTime` and `DateTime64` types
+- Geometric: `Point` type
 - JSON: `JSON` type and legacy `Object('JSON')` type (use `useLegacyJsonType=true` in the options)
 - UUID: `UUID` type
 - Arrays: `Array` type
