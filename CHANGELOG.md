@@ -1,5 +1,11 @@
 # clickhouse-schema
 
+## 3.1.0
+
+### Minor Changes
+
+- support for point type, tuple type and bug fixes
+
 ## 3.0.0
 
 ### Major Changes

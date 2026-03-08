@@ -11,6 +11,7 @@ export interface SchemaValue {
   type: ChDataType
 }
 export type ChSchemaDefinition = Record<string, SchemaValue>
+
 /**
  * ChSchemaOptions is used to define the options for a clickhouse table schema.
  *
@@ -31,6 +32,7 @@ export interface ChSchemaOptions<T extends ChSchemaDefinition> {
   engine?: string
   additional_options?: string[]
 }
+
 /**
  * IClickhouseSchema is an interface that represents a clickhouse schema.
  */
@@ -58,19 +60,36 @@ export class ClickhouseSchema<SchemaDefinition extends ChSchemaDefinition> imple
     return this.options
   }
 
+  /**
+   * Determines if the engine requires a sorting key.
+   * In ClickHouse, MergeTree family engines require ORDER BY or PRIMARY KEY.
+   */
+  private requiresOrderKey (engine: string): boolean {
+    return /MergeTree/i.test(engine)
+  }
+
   GetCreateTableQuery (): string {
-    if (this.options.primary_key === undefined && this.options.order_by === undefined && this.options.on_cluster === undefined) {
+    const engine = this.options.engine ?? 'MergeTree()'
+
+    // Only enforce key requirement for MergeTree engines
+    if (this.requiresOrderKey(engine) && this.options.primary_key === undefined && this.options.order_by === undefined) {
       throw new Error('One of order_by or primary_key must be specified')
     }
 
     const columns = Object.entries(this.schema as ChSchemaDefinition)
       .map(([name, field]) => {
-        // Check if default is defined and a string, add single quotes; otherwise, just use the value
-        let res = `${name} ${field.type}${field.type.default !== undefined ? ` DEFAULT ${field.type.typeStr === 'Object(\'JSON\')' ? `'${JSON.stringify(field.type.default)}'` : `${JSON.stringify(field.type.default)}`}` : ''}`
-        if (field.type.typeStr !== 'Object(\'JSON\')') {
-          res = res.replace(/"/g, "'")
+        let defaultStr = ''
+        if (field.type.default !== undefined) {
+          // Use type-specific default SQL formatting if available
+          const defaultSql = field.type.getDefaultSql?.()
+          if (defaultSql !== undefined) {
+            defaultStr = ` DEFAULT ${defaultSql}`
+          } else {
+            // Fallback to default behavior: JSON.stringify with quote replacement
+            defaultStr = ` DEFAULT ${JSON.stringify(field.type.default)}`.replace(/"/g, "'")
+          }
         }
-        return res
+        return `${name} ${field.type}${defaultStr}`
       }
       )
       .join(',\n')
@@ -79,10 +98,11 @@ export class ClickhouseSchema<SchemaDefinition extends ChSchemaDefinition> imple
     if (this.options.additional_options !== undefined) {
       additionalOptions = `${this.options.additional_options.join('\n')}`
     }
+
     const createTableQuery = [
       `CREATE TABLE IF NOT EXISTS ${this.options.database !== undefined ? `${this.options.database}.` : ''}${this.options.table_name}${this.options.on_cluster !== undefined ? ` ON CLUSTER ${this.options.on_cluster}` : ''}`,
       `(\n${columns}\n)`,
-      `ENGINE = ${this.options.engine ?? 'MergeTree()'}`,
+      `ENGINE = ${engine}`,
       this.options.order_by !== undefined ? `ORDER BY ${this.options.order_by.toString()}` : '',
       this.options.primary_key !== undefined ? `PRIMARY KEY ${this.options.primary_key.toString()}` : '',
       additionalOptions

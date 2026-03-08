@@ -1,7 +1,5 @@
 # ClickHouse-Schema Guide
 
-**Version 3.0.0**
-
 In ClickHouse, defining and managing table schemas and their associated types can be done either manually or through the ClickHouse-Schema library. This guide compares these two approaches to illustrate the simplicity and efficiency ClickHouse-Schema brings to your projects.
 
 ## Traditional Manual Query Approach
@@ -107,6 +105,8 @@ To start using ClickHouse-Schema in your projects, follow these steps:
 - Boolean: `Boolean` type
 - Strings: `String` and `FixedString` types
 - Dates: `Date`, `Date32`, `DateTime` and `DateTime64` types
+- Geometric: `Point` type
+- Tuple: `Tuple` type
 - JSON: `JSON` type and legacy `Object('JSON')` type (use `useLegacyJsonType=true` in the options)
 - UUID: `UUID` type
 - Arrays: `Array` type

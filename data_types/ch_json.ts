@@ -21,6 +21,7 @@ export interface ChJSONOptions {
   skipRegexp?: string[]
   /**
    * Use legacy Object('JSON') type instead of new JSON type
+   * Note: Object('JSON') supports DEFAULT values, but requires allow_experimental_object_type = 1
    */
   useLegacyJsonType?: boolean
 }
@@ -79,5 +80,15 @@ export class ChJSON<T extends ChSchemaDefinition> implements ChDataType {
       return 'JSON'
     }
     return `JSON(${params.join(', ')})`
+  }
+
+  getDefaultSql(): string | undefined {
+    if (this.default === undefined) {
+      return undefined
+    }
+    // Both JSON and Object('JSON') type defaults need to be wrapped in single quotes
+    // ClickHouse requires JSON defaults to be string literals
+    // Note: Object('JSON') supports DEFAULT but requires allow_experimental_object_type = 1
+    return `'${JSON.stringify(this.default)}'`
   }
 }
