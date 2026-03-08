@@ -227,7 +227,6 @@ describe('ClickhouseSchema Tests', () => {
       const query = schema.GetCreateTableQuery()
       expect(query).toEqual(expectedQuery)
     } catch (e) {
-      console.log(e, 'hereeeeeee')
     }
   })
 
@@ -256,7 +255,6 @@ describe('ClickhouseSchema Tests', () => {
       "\nid UInt128," +
       "\nch_json JSON(max_dynamic_paths=2048, max_dynamic_types=64, foo.bar UInt32, baz String, SKIP secret, SKIP ignore.me, SKIP REGEXP 'private.*', SKIP REGEXP 'tmp.*')" +
       "\n)\nENGINE = MergeTree()\nPRIMARY KEY id;"
-    console.log(schema.GetCreateTableQuery())
     expect(schema.GetCreateTableQuery()).toEqual(expectedQuery)
   })
 
@@ -396,6 +394,63 @@ describe('ClickhouseSchema Tests', () => {
     const schema = new ClickhouseSchema(schemaDefinition, options)
     const query = schema.GetCreateTableQuery()
     const expectedQuery = 'CREATE TABLE IF NOT EXISTS geo_point\n(\np Point DEFAULT (10.5, 20.3)\n)\nENGINE = Memory();'
+    expect(query).toEqual(expectedQuery)
+  })
+
+  it('should generate a create table query with CHTuple', () => {
+    const schemaDefinition = {
+      coords: {
+        type: ClickhouseTypes.CHTuple(
+          ClickhouseTypes.CHFloat64(),
+          ClickhouseTypes.CHFloat64()
+        )
+      }
+    }
+  
+    const options: ChSchemaOptions<typeof schemaDefinition> = {
+      table_name: 'tuple_table',
+      engine: 'Memory()'
+    }
+  
+    const schema = new ClickhouseSchema(schemaDefinition, options)
+  
+    type SchemaType = InferClickhouseSchemaType<typeof schema>
+  
+    const _value: SchemaType['coords'] = [1, 2]
+    expect(_value).toEqual([1, 2])
+  
+    const query = schema.GetCreateTableQuery()
+  
+    const expectedQuery =
+      'CREATE TABLE IF NOT EXISTS tuple_table\n(\ncoords Tuple(Float64, Float64)\n)\nENGINE = Memory();'
+  
+    expect(query).toEqual(expectedQuery)
+  })
+  
+  it('should generate a create table query with CHTuple default value', () => {
+    const schemaDefinition = {
+      coords: {
+        type: ClickhouseTypes.CHTuple(
+          ClickhouseTypes.CHFloat64(),
+          ClickhouseTypes.CHFloat64(),
+          [10.5, 20.3]
+        )
+      }
+    }
+  
+  
+    const options: ChSchemaOptions<typeof schemaDefinition> = {
+      table_name: 'tuple_table',
+      engine: 'Memory()'
+    }
+  
+    const schema = new ClickhouseSchema(schemaDefinition, options)
+  
+    const query = schema.GetCreateTableQuery()
+  
+    const expectedQuery =
+      'CREATE TABLE IF NOT EXISTS tuple_table\n(\ncoords Tuple(Float64, Float64) DEFAULT (10.5, 20.3)\n)\nENGINE = Memory();'
+  
     expect(query).toEqual(expectedQuery)
   })
 })

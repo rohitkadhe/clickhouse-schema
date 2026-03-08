@@ -13,6 +13,7 @@ import { ChNullable } from '@clickhouse-schema-data-types/ch_nullable'
 import { ChFixedString, ChString } from '@clickhouse-schema-data-types/ch_string'
 import { ChUUID } from '@clickhouse-schema-data-types/ch_uuid'
 import { ChUInt8, ChUInt16, ChUInt32, ChUInt64, ChUInt128, ChUInt256, ChInt8, ChInt16, ChInt32, ChInt64, ChInt128, ChInt256 } from '@clickhouse-schema-data-types/ch_integer'
+import { ChTuple } from '@clickhouse-schema-data-types/ch_tuple'
 
 /**
  * ChDataType is an interface that represents a Clickhouse data type
@@ -166,6 +167,13 @@ export const CHPoint = <T extends ChPoint['typeScriptType']>(df?: T): ChPoint =>
 
 /**
  *
+ * @param df default value of the tuple [x, y]
+ * @returns a new ChTuple object
+ */
+export const CHTuple = <V1 extends ChDataType, V2 extends ChDataType, T extends ChTuple<V1, V2>['typeScriptType']>(V1: V1, V2: V2, df?: T): ChTuple<V1, V2> => new ChTuple(V1, V2, df)
+
+/**
+ *
  * @param precision precision of the decimal
  * @param scale scale of the decimal
  * @returns a new ChDecimal object
@@ -252,6 +260,7 @@ export const ClickhouseTypes = {
   CHIPv4,
   CHIPv6,
   CHPoint,
+  CHTuple,
   CHJSON,
   CHArray,
   CHEnum,

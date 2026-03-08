@@ -173,4 +173,19 @@ describe('Data Types Tests', () => {
     expect(point.toString()).toEqual('Point')
     expect(point.default).toEqual([10.5, 20.3])
   })
+
+  it('should correctly create a tuple data type with the correct typeStr', () => {
+    const tuple = ClickhouseTypes.CHTuple(
+      ClickhouseTypes.CHFloat64(), ClickhouseTypes.CHFloat64()
+    )
+  
+    expect(tuple.toString()).toEqual('Tuple(Float64, Float64)')
+  })
+  
+  it('should correctly create a tuple data type with default value', () => {
+    const tuple = ClickhouseTypes.CHTuple(ClickhouseTypes.CHFloat64(), ClickhouseTypes.CHFloat64(), [10.5, 20.3])
+  
+    expect(tuple.toString()).toEqual('Tuple(Float64, Float64)')
+    expect(tuple.getDefaultSql()).toEqual('(10.5, 20.3)')
+  })
 })
