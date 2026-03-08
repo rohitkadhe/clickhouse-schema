@@ -6,6 +6,7 @@ import { ChDecimal } from '@clickhouse-schema-data-types/ch_decimal'
 import { ChFloat32, ChFloat64 } from '@clickhouse-schema-data-types/ch_float'
 import { ChIPv4, ChIPv6 } from '@clickhouse-schema-data-types/ch_ip_address'
 import { ChJSON, ChJSONOptions } from '@clickhouse-schema-data-types/ch_json'
+import { ChPoint } from '@clickhouse-schema-data-types/ch_point'
 
 import { ChEnum, ChLowCardinality } from '@clickhouse-schema-data-types/ch_low_ cardinality'
 import { ChNullable } from '@clickhouse-schema-data-types/ch_nullable'
@@ -22,6 +23,11 @@ export interface ChDataType {
   innerType?: any
   typeScriptType: any
   toString: () => string
+  /**
+   * Returns the SQL representation of the default value, or undefined if no default.
+   * If not implemented, falls back to JSON.stringify with quote replacement.
+   */
+  getDefaultSql?: () => string | undefined
 }
 
 /**
@@ -153,6 +159,13 @@ export const CHIPv6 = <T extends ChIPv6['typeScriptType']> (df?: T): ChIPv6 => n
 
 /**
  *
+ * @param df default value of the Point as a tuple [x, y]
+ * @returns a new ChPoint object
+ */
+export const CHPoint = <T extends ChPoint['typeScriptType']>(df?: T): ChPoint => new ChPoint(df)
+
+/**
+ *
  * @param precision precision of the decimal
  * @param scale scale of the decimal
  * @returns a new ChDecimal object
@@ -238,6 +251,7 @@ export const ClickhouseTypes = {
   CHFixedString,
   CHIPv4,
   CHIPv6,
+  CHPoint,
   CHJSON,
   CHArray,
   CHEnum,
@@ -250,6 +264,6 @@ export type ChPrimitiveType =
   ChInt8 | ChInt16 | ChInt32 | ChInt64 | ChInt128 | ChInt256 |
   ChFloat32 | ChFloat64 | ChDecimal<number, number> | ChBoolean |
   ChDate | ChDate32 | ChDateTime<string> | ChDateTime64<number, string> |
-  ChUUID | ChFixedString<number> | ChString | ChIPv4 | ChIPv6
+  ChUUID | ChFixedString<number> | ChString | ChIPv4 | ChIPv6 | ChPoint
 
 export type ChCompositeType = ChArray<ChArray<ChDataType> | ChDataType> | ChEnum<Record<string, number>> | ChNullable<ChPrimitiveType> | ChJSON<ChSchemaDefinition> | ChLowCardinality<ChString | ChFixedString<number>>

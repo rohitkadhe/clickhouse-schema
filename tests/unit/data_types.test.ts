@@ -162,4 +162,15 @@ describe('Data Types Tests', () => {
     expect(ipv4.toString()).toEqual('IPv4')
     expect(ipv6.toString()).toEqual('IPv6')
   })
+
+  it('should correctly create a point data type with the correct typeStr', () => {
+    const point = ClickhouseTypes.CHPoint()
+    expect(point.toString()).toEqual('Point')
+  })
+
+  it('should correctly create a point data type with default value', () => {
+    const point = ClickhouseTypes.CHPoint([10.5, 20.3])
+    expect(point.toString()).toEqual('Point')
+    expect(point.default).toEqual([10.5, 20.3])
+  })
 })

@@ -310,4 +310,92 @@ describe('ClickhouseSchema Tests', () => {
       "\n)\nENGINE = MergeTree()\nPRIMARY KEY id;"
     expect(schema.GetCreateTableQuery()).toEqual(expectedQuery)
   })
+
+  it('should generate a create table query with CHJSON with default value', () => {
+    const schemaDefinition = {
+      id: { type: ClickhouseTypes.CHUInt64() },
+      data: { type: ClickhouseTypes.CHJSON(
+        { foo: { type: ClickhouseTypes.CHString() } },
+        { foo: 'bar' }
+      ) }
+    }
+    const options: ChSchemaOptions<typeof schemaDefinition> = {
+      table_name: 'test_table',
+      order_by: 'id'
+    }
+    const schema = new ClickhouseSchema(schemaDefinition, options)
+    const expectedQuery = 'CREATE TABLE IF NOT EXISTS test_table\n(\nid UInt64,\ndata JSON DEFAULT \'{"foo":"bar"}\'\n)\nENGINE = MergeTree()\nORDER BY id;'
+    expect(schema.GetCreateTableQuery()).toEqual(expectedQuery)
+  })
+
+  it('should generate a create table query with Object(\'JSON\') with default value', () => {
+    const schemaDefinition = {
+      id: { type: ClickhouseTypes.CHUInt64() },
+      data: { type: ClickhouseTypes.CHJSON(
+        { foo: { type: ClickhouseTypes.CHString() } },
+        { foo: 'bar' },
+        { useLegacyJsonType: true }
+      ) }
+    }
+    const options: ChSchemaOptions<typeof schemaDefinition> = {
+      table_name: 'test_table',
+      order_by: 'id'
+    }
+    const schema = new ClickhouseSchema(schemaDefinition, options)
+    const expectedQuery = 'CREATE TABLE IF NOT EXISTS test_table\n(\nid UInt64,\ndata Object(\'JSON\') DEFAULT \'{"foo":"bar"}\'\n)\nENGINE = MergeTree()\nORDER BY id;'
+    expect(schema.GetCreateTableQuery()).toEqual(expectedQuery)
+  })
+
+  it('should generate a create table query with CHPoint and Memory engine using toString', () => {
+    const schemaDefinition = {
+      p: { type: ClickhouseTypes.CHPoint() }
+    }
+    const options: ChSchemaOptions<typeof schemaDefinition> = {
+      table_name: 'geo_point',
+      engine: 'Memory()'
+    }
+    const schema = new ClickhouseSchema(schemaDefinition, options)
+    type SchemaType = InferClickhouseSchemaType<typeof schema>
+    // Compile-time check: p should be inferred as [number, number]
+    const _pointValue: SchemaType['p'] = [1, 2]
+    expect(_pointValue).toEqual([1, 2])
+
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string
+    const query = schema.toString()
+    const expectedQuery = 'CREATE TABLE IF NOT EXISTS geo_point\n(\np Point\n)\nENGINE = Memory();'
+    expect(query).toEqual(expectedQuery)
+  })
+
+  it('should generate a create table query with CHPoint and default value', () => {
+    const schemaDefinition = {
+      p: { type: ClickhouseTypes.CHPoint([0, 0]) }
+    }
+    const options: ChSchemaOptions<typeof schemaDefinition> = {
+      table_name: 'geo_point',
+      engine: 'Memory()'
+    }
+    const schema = new ClickhouseSchema(schemaDefinition, options)
+    type SchemaType = InferClickhouseSchemaType<typeof schema>
+    // Compile-time check: p should be inferred as [number, number]
+    const _pointValue: SchemaType['p'] = [0, 0]
+    expect(_pointValue).toEqual([0, 0])
+
+    const query = schema.GetCreateTableQuery()
+    const expectedQuery = 'CREATE TABLE IF NOT EXISTS geo_point\n(\np Point DEFAULT (0, 0)\n)\nENGINE = Memory();'
+    expect(query).toEqual(expectedQuery)
+  })
+
+  it('should generate a create table query with CHPoint and non-zero default value', () => {
+    const schemaDefinition = {
+      p: { type: ClickhouseTypes.CHPoint([10.5, 20.3]) }
+    }
+    const options: ChSchemaOptions<typeof schemaDefinition> = {
+      table_name: 'geo_point',
+      engine: 'Memory()'
+    }
+    const schema = new ClickhouseSchema(schemaDefinition, options)
+    const query = schema.GetCreateTableQuery()
+    const expectedQuery = 'CREATE TABLE IF NOT EXISTS geo_point\n(\np Point DEFAULT (10.5, 20.3)\n)\nENGINE = Memory();'
+    expect(query).toEqual(expectedQuery)
+  })
 })
