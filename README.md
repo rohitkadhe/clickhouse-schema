@@ -105,7 +105,7 @@ To start using ClickHouse-Schema in your projects, follow these steps:
 - Boolean: `Boolean` type
 - Strings: `String` and `FixedString` types
 - Dates: `Date`, `Date32`, `DateTime` and `DateTime64` types
-- Geometric: `Point` type
+- Geometric: `Point` type, `Ring` type
 - Tuple: `Tuple` type
 - JSON: `JSON` type and legacy `Object('JSON')` type (use `useLegacyJsonType=true` in the options)
 - UUID: `UUID` type
@@ -127,7 +127,7 @@ When creating a schema, you can provide the following options:
 - `database` (optional): The database to use for the table
 - `on_cluster` (optional): The name of the cluster to use for the table
 - `engine` (optional): The engine to use for the table, default is `MergeTree()`
-- `partition_by` (optional): The partition expression for the table. Can be any valid ClickHouse 
+- `partition_by` (optional): The partition expression for the table. Can be any valid ClickHouse expression.
 - `additional_options` (optional): An array of strings that are appended to the end of the CREATE TABLE query (e.g., `['COMMENT \'Table comment\'']`)
 
 ## ☕ Support this project

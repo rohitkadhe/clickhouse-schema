@@ -1,5 +1,11 @@
 # clickhouse-schema
 
+## 3.2.0
+
+### Minor Changes
+
+- Support for ring type
+
 ## 3.1.2
 
 ### Patch Changes
