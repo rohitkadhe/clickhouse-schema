@@ -585,4 +585,104 @@ describe('ClickhouseSchema Tests', () => {
     const expectedQuery = 'CREATE TABLE IF NOT EXISTS geo_ring\n(\nr Ring DEFAULT [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0)]\n)\nENGINE = Memory();'
     expect(query).toEqual(expectedQuery)
   })
+
+  it('should use fallback path for types with default that do not implement getDefaultSql', () => {
+    const schemaDefinition = {
+      id: { type: ClickhouseTypes.CHUInt8(42) },
+      name: { type: ClickhouseTypes.CHString('test') },
+      active: { type: ClickhouseTypes.CHBoolean(true) },
+      uuid: { type: ClickhouseTypes.CHUUID('550e8400-e29b-41d4-a716-446655440000') }
+    }
+    const options: ChSchemaOptions<typeof schemaDefinition> = {
+      table_name: 'fallback_test',
+      engine: 'Memory()'
+    }
+    const schema = new ClickhouseSchema(schemaDefinition, options)
+    const query = schema.GetCreateTableQuery()
+    // These types don't implement getDefaultSql, so they should use the fallback path
+    expect(query).toContain('id UInt8 DEFAULT 42')
+    expect(query).toContain("name String DEFAULT 'test'")
+    expect(query).toContain('active Boolean DEFAULT true')
+    expect(query).toContain("uuid UUID DEFAULT '550e8400-e29b-41d4-a716-446655440000'")
+  })
+
+  it('should handle getDefaultSql returning undefined', () => {
+    const schemaDefinition = {
+      r: { type: ClickhouseTypes.CHRing() }, // No default, getDefaultSql will return undefined
+      p: { type: ClickhouseTypes.CHPoint() } // No default, getDefaultSql will return undefined
+    }
+    const options: ChSchemaOptions<typeof schemaDefinition> = {
+      table_name: 'no_defaults',
+      engine: 'Memory()'
+    }
+    const schema = new ClickhouseSchema(schemaDefinition, options)
+    const query = schema.GetCreateTableQuery()
+    // Should not have DEFAULT clauses
+    expect(query).toContain('r Ring')
+    expect(query).not.toContain('r Ring DEFAULT')
+    expect(query).toContain('p Point')
+    expect(query).not.toContain('p Point DEFAULT')
+  })
+
+  it('should handle all optional fields as undefined', () => {
+    const schemaDefinition = {
+      id: { type: ClickhouseTypes.CHUInt8() }
+    }
+    const options: ChSchemaOptions<typeof schemaDefinition> = {
+      table_name: 'minimal_table',
+      engine: 'Memory()'
+    }
+    const schema = new ClickhouseSchema(schemaDefinition, options)
+    const query = schema.GetCreateTableQuery()
+    // Should not include database, on_cluster, partition_by, order_by, primary_key, additional_options
+    expect(query).not.toContain('minimal_table.')
+    expect(query).not.toContain('ON CLUSTER')
+    expect(query).not.toContain('PARTITION BY')
+    expect(query).not.toContain('ORDER BY')
+    expect(query).not.toContain('PRIMARY KEY')
+    expect(query).toContain('CREATE TABLE IF NOT EXISTS minimal_table')
+  })
+
+  it('should handle database option without other optional fields', () => {
+    const schemaDefinition = {
+      id: { type: ClickhouseTypes.CHUInt8() }
+    }
+    const options: ChSchemaOptions<typeof schemaDefinition> = {
+      table_name: 'test_table',
+      database: 'test_db',
+      engine: 'Memory()'
+    }
+    const schema = new ClickhouseSchema(schemaDefinition, options)
+    const query = schema.GetCreateTableQuery()
+    expect(query).toContain('test_db.test_table')
+  })
+
+  it('should handle on_cluster option without other optional fields', () => {
+    const schemaDefinition = {
+      id: { type: ClickhouseTypes.CHUInt8() }
+    }
+    const options: ChSchemaOptions<typeof schemaDefinition> = {
+      table_name: 'test_table',
+      on_cluster: 'test_cluster',
+      engine: 'Memory()'
+    }
+    const schema = new ClickhouseSchema(schemaDefinition, options)
+    const query = schema.GetCreateTableQuery()
+    expect(query).toContain('ON CLUSTER test_cluster')
+  })
+
+  it('should handle partition_by option without other optional fields', () => {
+    const schemaDefinition = {
+      id: { type: ClickhouseTypes.CHUInt8() },
+      date: { type: ClickhouseTypes.CHDate() }
+    }
+    const options: ChSchemaOptions<typeof schemaDefinition> = {
+      table_name: 'test_table',
+      partition_by: 'toYYYYMM(date)',
+      engine: 'Memory()'
+    }
+    const schema = new ClickhouseSchema(schemaDefinition, options)
+    const query = schema.GetCreateTableQuery()
+    expect(query).toContain('PARTITION BY toYYYYMM(date)')
+  })
 })

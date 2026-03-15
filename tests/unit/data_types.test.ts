@@ -211,4 +211,48 @@ describe('Data Types Tests', () => {
     expect(tuple.toString()).toEqual('Tuple(Float64, Float64)')
     expect(tuple.getDefaultSql()).toEqual('(10.5, 10.5)')
   })
+
+  it('should return undefined from getDefaultSql when Point has no default', () => {
+    const point = ClickhouseTypes.CHPoint()
+    expect(point.getDefaultSql()).toBeUndefined()
+  })
+
+  it('should return undefined from getDefaultSql when Ring has no default', () => {
+    const ring = ClickhouseTypes.CHRing()
+    expect(ring.getDefaultSql()).toBeUndefined()
+  })
+
+  it('should return undefined from getDefaultSql when JSON has no default', () => {
+    const json = ClickhouseTypes.CHJSON({ foo: { type: ClickhouseTypes.CHString() } })
+    expect(json.getDefaultSql()).toBeUndefined()
+  })
+
+  it('should return undefined from getDefaultSql when Tuple has no default', () => {
+    const tuple = ClickhouseTypes.CHTuple([ClickhouseTypes.CHFloat64(), ClickhouseTypes.CHFloat64()])
+    expect(tuple.getDefaultSql()).toBeUndefined()
+  })
+
+  it('should handle Tuple getDefaultSql with undefined values (NULL case)', () => {
+    const tuple = ClickhouseTypes.CHTuple(
+      [ClickhouseTypes.CHFloat64(), ClickhouseTypes.CHString()],
+      [10.5, undefined] as any
+    )
+    expect(tuple.getDefaultSql()).toEqual("(10.5, NULL)")
+  })
+
+  it('should handle Tuple getDefaultSql with string values', () => {
+    const tuple = ClickhouseTypes.CHTuple(
+      [ClickhouseTypes.CHString(), ClickhouseTypes.CHString()],
+      ['hello', 'world']
+    )
+    expect(tuple.getDefaultSql()).toEqual("('hello', 'world')")
+  })
+
+  it('should handle Tuple getDefaultSql with mixed types', () => {
+    const tuple = ClickhouseTypes.CHTuple(
+      [ClickhouseTypes.CHFloat64(), ClickhouseTypes.CHString(), ClickhouseTypes.CHBoolean()],
+      [10.5, 'test', true]
+    )
+    expect(tuple.getDefaultSql()).toEqual("(10.5, 'test', true)")
+  })
 })
