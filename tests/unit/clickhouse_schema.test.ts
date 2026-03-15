@@ -541,4 +541,48 @@ describe('ClickhouseSchema Tests', () => {
     const expectedQuery = 'CREATE TABLE IF NOT EXISTS analytics_db.visits_table ON CLUSTER analytics_cluster\n(\nid UUID,\nvisitDate Date,\nname String\n)\nENGINE = ReplicatedMergeTree()\nPARTITION BY toYYYYMM(visitDate)\nORDER BY visitDate\nPRIMARY KEY id\nCOMMENT \'Visits table partitioned by month\';'
     expect(schema.GetCreateTableQuery()).toEqual(expectedQuery)
   })
+
+  it('should generate a create table query with CHRing and Memory engine', () => {
+    const schemaDefinition = {
+      r: { type: ClickhouseTypes.CHRing() }
+    }
+    const options: ChSchemaOptions<typeof schemaDefinition> = {
+      table_name: 'geo_ring',
+      engine: 'Memory()'
+    }
+    const schema = new ClickhouseSchema(schemaDefinition, options)
+    type SchemaType = InferClickhouseSchemaType<typeof schema>
+    // Compile-time check: r should be inferred as Array<[number, number]>
+    const _ringValue: SchemaType['r'] = [[0.0, 0.0], [1.0, 0.0]]
+    expect(_ringValue).toEqual([[0.0, 0.0], [1.0, 0.0]])
+
+    const query = schema.GetCreateTableQuery()
+    const expectedQuery = 'CREATE TABLE IF NOT EXISTS geo_ring\n(\nr Ring\n)\nENGINE = Memory();'
+    expect(query).toEqual(expectedQuery)
+  })
+
+  it('should generate a create table query with CHRing and default value', () => {
+    const schemaDefinition = {
+      r: { type: ClickhouseTypes.CHRing([
+        [0.0, 0.0],
+        [1.0, 0.0],
+        [1.0, 1.0],
+        [0.0, 1.0],
+        [0.0, 0.0]
+      ]) }
+    }
+    const options: ChSchemaOptions<typeof schemaDefinition> = {
+      table_name: 'geo_ring',
+      engine: 'Memory()'
+    }
+    const schema = new ClickhouseSchema(schemaDefinition, options)
+    type SchemaType = InferClickhouseSchemaType<typeof schema>
+    // Compile-time check: r should be inferred as Array<[number, number]>
+    const _ringValue: SchemaType['r'] = [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0], [0.0, 0.0]]
+    expect(_ringValue).toEqual([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0], [0.0, 0.0]])
+
+    const query = schema.GetCreateTableQuery()
+    const expectedQuery = 'CREATE TABLE IF NOT EXISTS geo_ring\n(\nr Ring DEFAULT [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0)]\n)\nENGINE = Memory();'
+    expect(query).toEqual(expectedQuery)
+  })
 })

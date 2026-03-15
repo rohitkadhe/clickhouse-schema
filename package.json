@@ -28,6 +28,10 @@
     "changeset_version": "changeset version"
   },
   "keywords": [
+    "clickhouse",
+    "clickhouse schema",
+    "clickhouse types",
+    "type safe",
     "clickhouse-schema",
     "clickhouse-type-safety",
     "clickhouse-types",

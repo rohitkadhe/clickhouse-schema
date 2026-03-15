@@ -7,6 +7,7 @@ import { ChFloat32, ChFloat64 } from '@clickhouse-schema-data-types/ch_float'
 import { ChIPv4, ChIPv6 } from '@clickhouse-schema-data-types/ch_ip_address'
 import { ChJSON, ChJSONOptions } from '@clickhouse-schema-data-types/ch_json'
 import { ChPoint } from '@clickhouse-schema-data-types/ch_point'
+import { ChRing } from '@clickhouse-schema-data-types/ch_ring'
 
 import { ChEnum, ChLowCardinality } from '@clickhouse-schema-data-types/ch_low_ cardinality'
 import { ChNullable } from '@clickhouse-schema-data-types/ch_nullable'
@@ -167,6 +168,13 @@ export const CHPoint = <T extends ChPoint['typeScriptType']>(df?: T): ChPoint =>
 
 /**
  *
+ * @param df default value of the Ring as an array of float pairs [[x1, y1], [x2, y2], ...]
+ * @returns a new ChRing object
+ */
+export const CHRing = <T extends ChRing['typeScriptType']>(df?: T): ChRing => new ChRing(df)
+
+/**
+ *
  * @param df default value of the tuple [x, y]
  * @returns a new ChTuple object
  */
@@ -259,6 +267,7 @@ export const ClickhouseTypes = {
   CHIPv4,
   CHIPv6,
   CHPoint,
+  CHRing,
   CHTuple,
   CHJSON,
   CHArray,
@@ -272,6 +281,6 @@ export type ChPrimitiveType =
   ChInt8 | ChInt16 | ChInt32 | ChInt64 | ChInt128 | ChInt256 |
   ChFloat32 | ChFloat64 | ChDecimal<number, number> | ChBoolean |
   ChDate | ChDate32 | ChDateTime<string> | ChDateTime64<number, string> |
-  ChUUID | ChFixedString<number> | ChString | ChIPv4 | ChIPv6 | ChPoint
+  ChUUID | ChFixedString<number> | ChString | ChIPv4 | ChIPv6 | ChPoint | ChRing
 
 export type ChCompositeType = ChArray<ChArray<ChDataType> | ChDataType> | ChEnum<Record<string, number>> | ChNullable<ChPrimitiveType> | ChJSON<ChSchemaDefinition> | ChLowCardinality<ChString | ChFixedString<number>>

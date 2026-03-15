@@ -174,6 +174,29 @@ describe('Data Types Tests', () => {
     expect(point.default).toEqual([10.5, 20.3])
   })
 
+  it('should correctly create a ring data type with the correct typeStr', () => {
+    const ring = ClickhouseTypes.CHRing()
+    expect(ring.toString()).toEqual('Ring')
+  })
+
+  it('should correctly create a ring data type with default value', () => {
+    const ring = ClickhouseTypes.CHRing([
+      [0.0, 0.0],
+      [1.0, 0.0],
+      [1.0, 1.0],
+      [0.0, 1.0],
+      [0.0, 0.0]
+    ])
+    expect(ring.toString()).toEqual('Ring')
+    expect(ring.default).toEqual([
+      [0.0, 0.0],
+      [1.0, 0.0],
+      [1.0, 1.0],
+      [0.0, 1.0],
+      [0.0, 0.0]
+    ])
+  })
+
   it('should correctly create a tuple data type with the correct typeStr', () => {
     const tuple = ClickhouseTypes.CHTuple(
       [ClickhouseTypes.CHFloat64(), ClickhouseTypes.CHFloat64()]
