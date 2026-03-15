@@ -3,7 +3,7 @@
   "license": "MIT",
   "name": "clickhouse-schema",
   "description": "Clickhouse-Schema is a TypeScript library that simplifies working with ClickHouse databases by allowing developers to effortlessly define table schemas in TypeScript. This approach not only ensures robust type safety but also significantly reduces development time by automating the generation of TypeScript types that mirror your ClickHouse schemas.",
-  "version": "3.1.2",
+  "version": "3.2.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
